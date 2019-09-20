@@ -18,24 +18,48 @@ import java.awt.image.RescaleOp;
 import java.io.*;
 
 public class Chip8{
+    int save_x;
 
     short delay_timer = 0, sound_timer = 0;
 
     public boolean[] key_state = new boolean[255];
-    boolean[][] screenData = new boolean[64][32]; 
+    boolean[][] screenData = new boolean[32][64]; 
     boolean draw_flag = false;
+    boolean cpu_lock = false;
 
-    byte[] ro_Memory = new byte[0xFFF]; // 4095 bytes of Read-Only Game Memory
+    byte[] memory = new byte[0xFFF]; // 4095 bytes Game Memory
     byte[] registers = new byte[16];    // 8-bit Data Registers (V0 - VF)
     short addressI;                     // 16-bit Address Register I
     int programCounter;               // 16-bit Program Counter
     Stack programStack = new Stack();   // 16-bit program stack
 
+    Chip8GUIunit window = null;
 
+    short[] chip8_font_set = {
+        0xF0, 0x90, 0x90, 0x90, 0xF0, // 0  , starts at address 0
+        0x20, 0x60, 0x20, 0x20, 0x70, // 1  , 5
+        0xF0, 0x10, 0xF0, 0x80, 0xF0, // 2  , 10 ...
+        0xF0, 0x10, 0xF0, 0x10, 0xF0, // 3
+        0x90, 0x90, 0xF0, 0x10, 0x10, // 4
+        0xF0, 0x80, 0xF0, 0x10, 0xF0, // 5
+        0xF0, 0x80, 0xF0, 0x90, 0xF0, // 6
+        0xF0, 0x10, 0x20, 0x40, 0x40, // 7
+        0xF0, 0x90, 0xF0, 0x90, 0xF0, // 8
+        0xF0, 0x90, 0xF0, 0x10, 0xF0, // 9
+        0xF0, 0x90, 0xF0, 0x90, 0x90, // A
+        0xE0, 0x90, 0xE0, 0x90, 0xE0, // B
+        0xF0, 0x80, 0x80, 0x80, 0xF0, // C
+        0xE0, 0x90, 0x90, 0x90, 0xE0, // D
+        0xF0, 0x80, 0xF0, 0x80, 0xF0, // E
+        0xF0, 0x80, 0xF0, 0x80, 0x80  // F
+    };
 
+    public Chip8(Chip8GUIunit gui){
+        CPUReset();
+        window = gui;
+    }
     public Chip8(){
         CPUReset();
-        
     }
     public void CPUReset(){
         addressI = 0;
@@ -44,6 +68,7 @@ public class Chip8{
         screenData = new boolean[64][32];
         programStack = new Stack();
         draw_flag = false;
+        cpu_lock = false;
 
         sound_timer = 0;
         delay_timer = 0;
@@ -56,7 +81,7 @@ public class Chip8{
     private void loadROM(String filename){
         try{
             FileInputStream fs = new FileInputStream(filename);
-            fs.read(ro_Memory,0x200,0xFFF);
+            fs.read(memory,0x200,0xFFF);
             fs.close();
         }catch(Exception e){
             e.printStackTrace();
@@ -64,11 +89,12 @@ public class Chip8{
     }
     
     public void emulateCycle(){
+        //System.out.println("hi");
         decodeOpcode(fetchNextOpcode());
 
-        //update timers
 
-        //sleep?
+        //update timers
+        update_timers();
     }
 
     /*
@@ -76,15 +102,16 @@ public class Chip8{
      */
 
     private short fetchNextOpcode(){
-        short r = ro_Memory[programCounter];
+        short r = memory[programCounter];
         r <<= 8;
-        r |= ro_Memory[programCounter+1];
+        r |= memory[programCounter+1];
         programCounter += 2;
         return r;
     }
 
     /*
-     * function decodes opcode and executes one of many opcode functions
+     * function decodes opcode and executes one of
+       many opcode functions
      */
 
     private void decodeOpcode(short opcode){ 
@@ -226,20 +253,26 @@ public class Chip8{
     }
     
     /*
-     * function updates delay and sound timers iteratively. Actual cycle timing of executions handled by emulateCycle function
+     * function updates delay and sound timers iteratively. Actual cycle timing of executions handled by Emulator
      */
-    private void updateTimers(){
+    private void update_timers(){
         if(delay_timer > 0){
             delay_timer--;
         }
         if(sound_timer > 0){
             if(sound_timer == 1){
-               window.make_sound(); 
+               make_sound(); 
             }
             sound_timer--;
         }
     }
     
+    private void make_sound(){
+        if(window != null){
+            window.make_sound();
+        }
+    }
+
     private void op_00E0(){
         draw_flag = false;
         screenData = new boolean[64][32]; 
@@ -364,7 +397,7 @@ public class Chip8{
     private void op_CXNN(short opcode){
         int x = (opcode & 0x0F00) >> 8;
         byte nn = (byte)(opcode & 0x00FF);
-        registers[x] = (byte)(((byte) (Math.random()*(255))-128) & nn);
+        registers[x] = (byte)(((byte) (Math.random()*(255))) & nn);
     }
     private void op_DXYN(short opcode){
         draw_flag = true;
@@ -373,7 +406,7 @@ public class Chip8{
         int n = (opcode & 0x000F);
         registers[0xF] = 0;
         for(int row = 0; row < n; row++){
-            byte data = ro_Memory[addressI + row];
+            byte data = memory[addressI + row];
             for(int column = 0; column < 8; column++){
                 int mask = 1 << (7-column);
                 if((data & mask >> (7-column) )== 1){
@@ -387,28 +420,67 @@ public class Chip8{
             }
         }
     }
-    private void op_EX9E(short opcode){}
-    private void op_EXA1(short opcode){}
-    private void op_FX07(short opcode){}
+    private void op_EX9E(short opcode){
+        int x = (opcode & 0x0F00) >> 8;
+        if(key_state[registers[x]]){
+            programCounter += 2;
+        }
+    }
+    private void op_EXA1(short opcode){
+        int x = (opcode & 0x0F00) >> 8;
+        if(!key_state[registers[x]]){
+            programCounter += 2;
+        }
+    }
+    private void op_FX07(short opcode){
+        int x = (opcode & 0x0F00) >> 8;
+        registers[x] = (byte)(delay_timer % Byte.MAX_VALUE); // no documentation, assume correct implementation. Error converting short to byte otherwise
+    }
     private void op_FX0A(short opcode){
-
+        cpu_lock = true;
+        save_x = (opcode & 0x0F00) >> 8;
     }
     private void op_FX15(short opcode){
-
+        int x = (opcode & 0x0F00) >> 8;
+        delay_timer = registers[x];
     }
     private void op_FX18(short opcode){
-        
+        int x = (opcode & 0x0F00) >> 8;
+        sound_timer = registers[x];
     }
     private void op_FX1E(short opcode){
         int x = (opcode & 0x0F00) >> 8;
         addressI += registers[x]; // check for carry flag?
     }
     private void op_FX29(short opcode){
-        
+        int x = (opcode & 0x0F00) >> 8;
+        if(48 <= registers[x] && registers[x] <= 57){ // 0-9
+            addressI = (short)((registers[x] - 48)*5);
+        }else if(65 <= registers[x] && registers[x] <= 70){ // A-F
+            addressI = (short)((registers[x] - 65 + 10)*5);
+        }else{
+            System.out.println("unrecognized character: " + (char)registers[x]);
+            //outside character set in chip 8 (0-F)
+        }
     }
-    private void op_FX33(short opcode){}
-    private void op_FX55(short opcode){}
-    private void op_FX65(short opcode){}
+    private void op_FX33(short opcode){
+        int x = (opcode & 0x0F00) >> 8;
+        memory[addressI]     = (byte)(registers[x] / 100); // check downcast to int?
+        memory[addressI + 1] = (byte)((registers[x] / 10) % 10);
+        memory[addressI + 2] = (byte)((registers[x] % 100) % 10);
+    }
+    private void op_FX55(short opcode){
+        int x = (opcode & 0x0F00) >> 8;
+        for(int i = 0; i <= x; i++){
+            memory[addressI + i] = registers[i];
+        }
+    }
+    private void op_FX65(short opcode){
+        int x = (opcode & 0x0F00) >> 8;
+        for(int i = 0; i <= x; i++){
+            registers[i] = memory[addressI + i];
+        }
+    }
 
 
 
