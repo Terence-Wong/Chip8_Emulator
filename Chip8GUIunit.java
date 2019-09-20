@@ -4,7 +4,7 @@
  import java.awt.*;
 public class Chip8GUIunit extends JFrame implements KeyListener{
     //public static JFrame frame = new JFrame("Chip8 System");
-    public Panel GUIPanel;
+    public MyPanel GUIPanel;
     public int HEIGHT = 320, WIDTH = 640;
 
     public boolean key_update_flag = false;
@@ -12,16 +12,30 @@ public class Chip8GUIunit extends JFrame implements KeyListener{
     public byte latest_key;
 
     public Chip8GUIunit(){
-        GUIPanel = new Panel(WIDTH,HEIGHT);
+        GUIPanel = new MyPanel(WIDTH,HEIGHT);
         GUIPanel.addKeyListener(this);
+        this.add(GUIPanel);
         this.setSize(WIDTH,HEIGHT);
         this.setVisible(true);
         this.addKeyListener(this);
         this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
     }
 
-    public void update_screen(){
-        GUIPanel.repaint();
+    public void update_screen(boolean[][] screen_data){
+        GUIPanel.draw_screen(screen_data);
+       /* Graphics g = GUIPanel.getGraphics();
+        int pixel_height = HEIGHT/screen_data.length;
+        int pixel_width = WIDTH/screen_data[0].length;
+
+
+        for(int x = 0; x < screen_data[0].length; x++){
+            for(int y = 0; y < screen_data.length; y++){
+                if(screen_data[y][x]){
+                    g.fillRect(0,0,10,10);
+                    g.fillRect(x*pixel_width, y*pixel_height, pixel_width, pixel_height);
+                }
+            }
+        }*/
     }
 
     public void make_sound(){
@@ -50,12 +64,34 @@ public class Chip8GUIunit extends JFrame implements KeyListener{
 
     public void keyTyped(KeyEvent e){}
 }
-class Panel extends JPanel{
-    Panel(int x, int y) {
+class MyPanel extends JPanel{
+    boolean[][] screen_data = new boolean[0][0];
+    Graphics g;
+    int HEIGHT, WIDTH;
+    MyPanel(int x, int y) {
+        WIDTH = x;
+        HEIGHT = y;
         this.setSize(x,y);
+    }
+    public void draw_screen(boolean[][] screen_data){
+        this.screen_data = screen_data;
+        repaint();
     }
     public void paintComponent(Graphics g) {
         super.paintComponent(g);
         // Other painting stuff
+
+        int pixel_height = HEIGHT/screen_data.length;
+        int pixel_width = WIDTH/screen_data[0].length;
+
+
+        for(int x = 0; x < screen_data[0].length; x++){
+            for(int y = 0; y < screen_data.length; y++){
+                if(screen_data[y][x]){
+                    System.out.println(x + " " + y);
+                    g.fillRect(x*pixel_width, y*pixel_height, pixel_width, pixel_height);
+                }
+            }
+        }
     }
 }

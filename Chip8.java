@@ -23,7 +23,7 @@ public class Chip8{
     short delay_timer = 0, sound_timer = 0;
 
     public boolean[] key_state = new boolean[100];
-    boolean[][] screenData = new boolean[32][64]; 
+    boolean[][] screen_data = new boolean[32][64]; 
     boolean draw_flag = false;
     boolean cpu_lock = false;
 
@@ -65,7 +65,7 @@ public class Chip8{
         addressI = 0;
         programCounter = 0x200;
         registers = new byte[16];
-        screenData = new boolean[64][32];
+        screen_data = new boolean[64][32];
         programStack = new Stack();
         draw_flag = false;
         cpu_lock = false;
@@ -277,7 +277,7 @@ public class Chip8{
 
     private void op_00E0(){
         draw_flag = true;
-        screenData = new boolean[64][32]; 
+        screen_data = new boolean[64][32]; 
     }
     private void op_00EE(){
         programCounter = (Integer)programStack.pop();
@@ -414,10 +414,10 @@ public class Chip8{
                 if((data & mask >> (7-column) )== 1){
                     int coordx = registers[x] + column;
                     int coordy = registers[y] + row;
-                    if(screenData[coordy][coordx]){  /// might be inverted
+                    if(screen_data[coordy][coordx]){  /// might be inverted
                         registers[0xF] = 1;
                     }
-                    screenData[coordy][coordx] = !screenData[coordy][coordx];
+                    screen_data[coordy][coordx] = !screen_data[coordy][coordx];
                 }
             }
         }
