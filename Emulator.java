@@ -1,3 +1,7 @@
+
+import java.awt.*;
+import javax.swing.*;
+
 public class Emulator{
     public static void main(String[] args) throws InterruptedException{
         Chip8GUIunit window = new Chip8GUIunit();
@@ -14,16 +18,27 @@ public class Emulator{
             }
             if(!cpu.cpu_lock){
                 //emulate a single cycle
-                cpu.emulateCycle();
+                //cpu.emulateCycle();
                 //check draw flag if graphics need to be updated
                 if(cpu.draw_flag){
                     cpu.draw_flag = false;
+                    Graphics g = window.GUIPanel.getGraphics();
+                    int pxHeight = window.HEIGHT/cpu.screenData.length;
+                    int pxWidth = window.WIDTH/cpu.screenData[0].length;
+                    for(int x = 0; x < cpu.screenData[0].length; x++){
+                        for(int y = 0; y < cpu.screenData.length; y++){
+                            if(cpu.screenData[y][x]){
+                                g.fillRect(x*pxWidth, y*pxHeight, pxWidth, pxHeight);
+                            }
+                        }
+                    }
+                    window.update_screen();
                 }
                 
                 //update key presses
                 cpu.key_state = window.key_state; //window.key_state.clone();
             }
-            Thread.sleep(2);
+            Thread.sleep(10);
         }
     }
 }

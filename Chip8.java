@@ -22,7 +22,7 @@ public class Chip8{
 
     short delay_timer = 0, sound_timer = 0;
 
-    public boolean[] key_state = new boolean[255];
+    public boolean[] key_state = new boolean[100];
     boolean[][] screenData = new boolean[32][64]; 
     boolean draw_flag = false;
     boolean cpu_lock = false;
@@ -98,6 +98,27 @@ public class Chip8{
     }
 
     /*
+     * function updates delay and sound timers iteratively. Actual cycle timing of executions handled by Emulator
+     */
+    private void update_timers(){
+        if(delay_timer > 0){
+            delay_timer--;
+        }
+        if(sound_timer > 0){
+            if(sound_timer == 1){
+               make_sound(); 
+            }
+            sound_timer--;
+        }
+    }
+    
+    private void make_sound(){
+        if(window != null){
+            window.make_sound();
+        }
+    }
+
+    /*
      * chip8 opcodes are 8-bits long, function is combining 2 4-bit addresses from memory
      */
 
@@ -115,6 +136,7 @@ public class Chip8{
      */
 
     private void decodeOpcode(short opcode){ 
+        System.out.println(opcode);
         switch(opcode & 0xF000){
             case 0x0000:
                 switch(opcode & 0x000F){
@@ -251,30 +273,10 @@ public class Chip8{
             break;
         }
     }
-    
-    /*
-     * function updates delay and sound timers iteratively. Actual cycle timing of executions handled by Emulator
-     */
-    private void update_timers(){
-        if(delay_timer > 0){
-            delay_timer--;
-        }
-        if(sound_timer > 0){
-            if(sound_timer == 1){
-               make_sound(); 
-            }
-            sound_timer--;
-        }
-    }
-    
-    private void make_sound(){
-        if(window != null){
-            window.make_sound();
-        }
-    }
+
 
     private void op_00E0(){
-        draw_flag = false;
+        draw_flag = true;
         screenData = new boolean[64][32]; 
     }
     private void op_00EE(){
