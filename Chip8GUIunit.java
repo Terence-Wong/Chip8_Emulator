@@ -65,7 +65,7 @@ public class Chip8GUIunit extends JFrame implements KeyListener{
     public void keyTyped(KeyEvent e){}
 }
 class MyPanel extends JPanel{
-    boolean[][] screen_data = new boolean[0][0];
+    boolean[][] screen_data = new boolean[1][1];
     Graphics g;
     int HEIGHT, WIDTH;
     MyPanel(int x, int y) {
@@ -88,7 +88,7 @@ class MyPanel extends JPanel{
         for(int x = 0; x < screen_data[0].length; x++){
             for(int y = 0; y < screen_data.length; y++){
                 if(screen_data[y][x]){
-                    System.out.println(x + " " + y);
+                    //System.out.println(x + " " + y);
                     g.fillRect(x*pixel_width, y*pixel_height, pixel_width, pixel_height);
                 }
             }

@@ -6,9 +6,7 @@ public class Emulator{
     static Chip8GUIunit window = new Chip8GUIunit();
     static Chip8 cpu = new Chip8(window);
     public static void main(String[] args) throws InterruptedException{
-        //Chip8GUIunit window = new Chip8GUIunit();
-        //Chip8 cpu = new Chip8(window);
-
+        
         //emulation loop
         while(true){
             //cpu locking mechanism for op_FX0A
@@ -23,10 +21,6 @@ public class Emulator{
                 cpu.emulateCycle();
                 //check draw flag if graphics need to be updated
 
-                //test
-                cpu.draw_flag = true;
-                cpu.screen_data[0][0] = true;
-
                 if(cpu.draw_flag){
                     cpu.draw_flag = false;
                     window.update_screen(cpu.screen_data);
@@ -35,7 +29,7 @@ public class Emulator{
                 //update key presses
                 cpu.key_state = window.key_state; //window.key_state.clone();
             }
-            Thread.sleep(100);
+            Thread.sleep(1000);
         }
     }
 }

@@ -73,16 +73,29 @@ public class Chip8{
         sound_timer = 0;
         delay_timer = 0;
         //load in ROM
+        for(int i = 0; i < 80; i++){
+            memory[i] = (byte)chip8_font_set[i];
+        }
+
         loadROM();
+        //loadROM("invader.bin");
     }
     private void loadROM(){
+        memory[0x200] = (byte)0x60;
+        memory[0x201] = (byte)0x00;
+        memory[0x202] = (byte)0xF0;
+        memory[0x203] = (byte)0x29;
+        memory[0x204] = (byte)0xD0;
+        memory[0x205] = (byte)0x05;
+        
 
     }
     private void loadROM(String filename){
         try{
             FileInputStream fs = new FileInputStream(filename);
-            fs.read(memory,0x200,0xFFF);
+            fs.read(memory,0x200,0xFFF - 0x200);
             fs.close();
+            System.out.println("hi");
         }catch(Exception e){
             e.printStackTrace();
         }
@@ -124,9 +137,22 @@ public class Chip8{
 
     private short fetchNextOpcode(){
         short r = memory[programCounter];
+        //System.out.print("0x"+Integer.toHexString(r) + " \t");
         r <<= 8;
         r |= memory[programCounter+1];
+
+        System.out.print("0x"+Integer.toHexString(r & 0xFFFF) + " \t|\t");
+        for(int x = 0; x < 8; x++){
+            System.out.print("0x"+Integer.toHexString(memory[programCounter+x] & 0xFF) + " ");
+        }
+        System.out.println("");
+        System.out.print("0d"+ (r) + " \t|\t");
+        for(int x = 0; x < 8; x++){
+            System.out.print("0d"+(memory[programCounter+x]) + " ");
+        }
+
         programCounter += 2;
+        //System.out.println("0x"+Integer.toHexString(r));
         return r;
     }
 
@@ -136,7 +162,9 @@ public class Chip8{
      */
 
     private void decodeOpcode(short opcode){ 
-        System.out.println(opcode);
+        System.out.println("");
+        System.out.println("");
+        //System.out.println("0x"+Integer.toHexString(opcode));
         switch(opcode & 0xF000){
             case 0x0000:
                 switch(opcode & 0x000F){
@@ -147,7 +175,7 @@ public class Chip8{
                         op_00EE();
                     break;
                     default:
-                        printError("unknown opcode: " + opcode);
+                        printError("unknown opcode: " + opcode, opcode);
                     break;
                 }
             break;
@@ -202,7 +230,7 @@ public class Chip8{
                         op_8XYE(opcode);
                     break;
                     default:
-                        printError("unknown opcode: " + opcode);
+                        printError("unknown opcode: " + opcode, opcode);
                     break;
                 }
             break;
@@ -230,7 +258,7 @@ public class Chip8{
                         op_EXA1(opcode);
                     break;
                     default:
-                        printError("unknown opcode: " + opcode);
+                        printError("unknown opcode: " + opcode, opcode);
                     break;
                 }
             break;
@@ -264,12 +292,13 @@ public class Chip8{
                         op_FX65(opcode);
                     break;
                     default:
-                        printError("unknown opcode: " + opcode);
+
+                        printError("unknown opcode: " + opcode, opcode);
                     break;
                 }
             break;
             default:
-                printError("unknown opcode: " + opcode);
+                printError("unknown opcode: " + opcode, opcode);
             break;
         }
     }
@@ -310,6 +339,8 @@ public class Chip8{
             programCounter += 2;
         }
     }
+
+    //Sets VX to NN. 
     private void op_6XNN(short opcode){
         int x = (opcode & 0x0F00) >> 8;
         byte nn = (byte)(opcode & 0x00FF);
@@ -486,8 +517,10 @@ public class Chip8{
 
 
 
-    public void printError(String e){
+    public void printError(String e, short opcode){
         System.out.println(e);
+        System.out.println("0x"+Integer.toHexString(opcode & 0xF000) + "");
+        
     }
 
 }
