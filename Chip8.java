@@ -85,8 +85,8 @@ public class Chip8{
         memory[0x201] = (byte)0x00;
         memory[0x202] = (byte)0xF0;
         memory[0x203] = (byte)0x29;
-        memory[0x204] = (byte)0xD0;
-        memory[0x205] = (byte)0x05;
+        memory[0x204] = (byte)0xD5;
+        memory[0x205] = (byte)0x55;
         
 
     }
@@ -433,6 +433,7 @@ public class Chip8{
         registers[x] = (byte)(((byte) (Math.random()*(255))) & nn);
     }
     private void op_DXYN(short opcode){
+        
         draw_flag = true;
         int x = (opcode & 0x0F00) >> 8;
         int y = (opcode & 0x00F0) >> 4;
@@ -440,11 +441,12 @@ public class Chip8{
         registers[0xF] = 0;
         for(int row = 0; row < n; row++){
             byte data = memory[addressI + row];
+            
             for(int column = 0; column < 8; column++){
                 int mask = 1 << (7-column);
-                if((data & mask >> (7-column) )== 1){
-                    int coordx = registers[x] + column;
-                    int coordy = registers[y] + row;
+                if( ( (data & mask) >> (7-column) ) == 1){
+                    int coordx = x + column;
+                    int coordy = y + row;
                     if(screen_data[coordy][coordx]){  /// might be inverted
                         registers[0xF] = 1;
                     }
@@ -452,6 +454,8 @@ public class Chip8{
                 }
             }
         }
+
+        //System.out.println("DXYN called");
     }
     private void op_EX9E(short opcode){
         int x = (opcode & 0x0F00) >> 8;
@@ -487,6 +491,16 @@ public class Chip8{
     }
     private void op_FX29(short opcode){
         int x = (opcode & 0x0F00) >> 8;
+
+        if(0 <= registers[x] && registers[x] <= 0xF){
+            addressI = (short)(registers[x]*5);
+        }else{
+            System.out.println("unrecognized character: " + (char)registers[x]);
+            //outside character set in chip 8 (0-F)
+        }
+
+        //PROBLEM
+        /*
         if(48 <= registers[x] && registers[x] <= 57){ // 0-9
             addressI = (short)((registers[x] - 48)*5);
         }else if(65 <= registers[x] && registers[x] <= 70){ // A-F
@@ -494,7 +508,7 @@ public class Chip8{
         }else{
             System.out.println("unrecognized character: " + (char)registers[x]);
             //outside character set in chip 8 (0-F)
-        }
+        }*/
     }
     private void op_FX33(short opcode){
         int x = (opcode & 0x0F00) >> 8;
