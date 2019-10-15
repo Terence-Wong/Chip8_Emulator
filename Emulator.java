@@ -11,11 +11,12 @@ public class Emulator{
         while(true){
             //cpu locking mechanism for op_FX0A
             if(window.key_update_flag){
-                window.key_update_flag = false;
+                
                 cpu.cpu_lock = false;
                 //if last called opcode is op_FX0A
                 cpu.registers[cpu.save_x] = window.latest_key;
             }
+            window.key_update_flag = false;
             if(!cpu.cpu_lock){
                 //emulate a single cycle
                 cpu.emulateCycle();
@@ -29,7 +30,7 @@ public class Emulator{
                 //update key presses
                 cpu.key_state = window.key_state; //window.key_state.clone();
             }
-            Thread.sleep(1000);
+            Thread.sleep(5);
         }
     }
 }

@@ -5,10 +5,10 @@
 public class Chip8GUIunit extends JFrame implements KeyListener{
     //public static JFrame frame = new JFrame("Chip8 System");
     public MyPanel GUIPanel;
-    public int HEIGHT = 320, WIDTH = 640;
+    public int HEIGHT = 320, WIDTH = 320;
 
     public boolean key_update_flag = false;
-    public boolean[] key_state = new boolean[100];
+    public boolean[] key_state = new boolean[16];
     public byte latest_key;
 
     public Chip8GUIunit(){
@@ -44,21 +44,33 @@ public class Chip8GUIunit extends JFrame implements KeyListener{
 
     public void keyPressed(KeyEvent e) {
         byte in = -1;
-        if(e.getKeyCode() < 255){ //max return value of .getKeyCode is much higher than byte
-            in = (byte)e.getKeyCode();
+        if((e.getKeyCode() >= (byte)'0' && e.getKeyCode() <= (byte)'9') ) { //max return value of .getKeyCode is much higher than byte
+            in = (byte)(e.getKeyCode()-(int)'0');
             key_state[in] = true;
             latest_key = (byte)e.getKeyCode();
-            System.out.println((char)in);
+            //System.out.println((char)in);
+            key_update_flag = true;
+        }
+        if(e.getKeyCode() >= (byte)'A' && e.getKeyCode() <= (byte)'F'){
+            in = (byte)(e.getKeyCode()-(int)'A');
+            key_state[in] = true;
+            latest_key = (byte)e.getKeyCode();
+            //System.out.println((char)in);
             key_update_flag = true;
         }
     }
 
     public void keyReleased(KeyEvent e) {
         byte in = -1;
-        if(e.getKeyCode() < 255){ //max return value of .getKeyCode is much higher than byte
-            in = (byte)e.getKeyCode();
+        if((e.getKeyCode() >= (byte)'0' && e.getKeyCode() <= (byte)'9') ) { //max return value of .getKeyCode is much higher than byte
+            in = (byte)(e.getKeyCode()-(int)'0');
             key_state[in] = false;
-            //System.out.println((char)in);
+            latest_key = (byte)e.getKeyCode();
+        }
+        if((e.getKeyCode() >= (byte)'A' && e.getKeyCode() <= (byte)'F')){
+            in = (byte)(e.getKeyCode()-(int)'A');
+            key_state[in] = false;
+            latest_key = (byte)e.getKeyCode();
         }
     }
 
