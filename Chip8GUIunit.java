@@ -3,7 +3,6 @@
  import java.awt.event.*;
  import java.awt.*;
 public class Chip8GUIunit extends JFrame implements KeyListener{
-    //public static JFrame frame = new JFrame("Chip8 System");
     public MyPanel GUIPanel;
     public int HEIGHT = 320, WIDTH = 640;
 
@@ -23,19 +22,6 @@ public class Chip8GUIunit extends JFrame implements KeyListener{
 
     public void update_screen(boolean[][] screen_data){
         GUIPanel.draw_screen(screen_data);
-       /* Graphics g = GUIPanel.getGraphics();
-        int pixel_height = HEIGHT/screen_data.length;
-        int pixel_width = WIDTH/screen_data[0].length;
-
-
-        for(int x = 0; x < screen_data[0].length; x++){
-            for(int y = 0; y < screen_data.length; y++){
-                if(screen_data[y][x]){
-                    g.fillRect(0,0,10,10);
-                    g.fillRect(x*pixel_width, y*pixel_height, pixel_width, pixel_height);
-                }
-            }
-        }*/
     }
 
     public void make_sound(){

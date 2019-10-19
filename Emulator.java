@@ -4,9 +4,9 @@ import javax.swing.*;
 
 public class Emulator{
     static Chip8GUIunit window = new Chip8GUIunit();
-    static Chip8 cpu = new Chip8(window);
+    static Chip8 cpu;
     public static void main(String[] args) throws InterruptedException{
-        
+        cpu = new Chip8(window);
         //emulation loop
         while(true){
             //cpu locking mechanism for op_FX0A
@@ -28,7 +28,7 @@ public class Emulator{
                 }
                 
                 //update key presses
-                cpu.key_state = window.key_state; //window.key_state.clone();
+                cpu.key_state = window.key_state;
             }
             Thread.sleep(3);
         }

@@ -81,8 +81,8 @@ public class Chip8{
         }
 
         //loadROM();
-        //loadROM("invader.bin");
-        loadROM("Tic-Tac-Toe [David Winter].ch8");
+        loadROM("invader.bin");
+        //loadROM("Tic-Tac-Toe [David Winter].ch8");
     }
     private void loadROM(){
         /*
@@ -191,7 +191,6 @@ public class Chip8{
         }
         
         programCounter += 2;
-        //System.out.println("0x"+Integer.toHexString(r));
         return r;
     }
 
@@ -201,7 +200,6 @@ public class Chip8{
      */
 
     private void decodeOpcode(short opcode){ 
-        //System.out.println("0x"+Integer.toHexString(opcode));
         switch(opcode & 0xF000){
             case 0x0000:
                 switch(opcode & 0x000F){
@@ -491,7 +489,7 @@ public class Chip8{
         byte nn = (byte)(opcode & 0x00FF);
         registers[x] = ((int) Math.round(Math.random()*(255))) & nn;
     }
-    // draws I's sprite at (X,Y) of height N  /// hard check sometime?
+    // draws I's sprite at (X,Y) of height N  ///
     private void op_DXYN(short opcode){;
 
         draw_flag = true;
@@ -527,7 +525,6 @@ public class Chip8{
             }
         }
 
-        //System.out.println("DXYN called");
     }
 
     private void op_EX9E(short opcode){
