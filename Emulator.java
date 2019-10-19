@@ -30,7 +30,7 @@ public class Emulator{
                 //update key presses
                 cpu.key_state = window.key_state; //window.key_state.clone();
             }
-            Thread.sleep(5);
+            Thread.sleep(3);
         }
     }
 }

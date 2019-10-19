@@ -47,14 +47,14 @@ public class Chip8GUIunit extends JFrame implements KeyListener{
         if((e.getKeyCode() >= (byte)'0' && e.getKeyCode() <= (byte)'9') ) { //max return value of .getKeyCode is much higher than byte
             in = (byte)(e.getKeyCode()-(int)'0');
             key_state[in] = true;
-            latest_key = (byte)e.getKeyCode();
+            latest_key = in;
             //System.out.println((char)in);
             key_update_flag = true;
         }
         if(e.getKeyCode() >= (byte)'A' && e.getKeyCode() <= (byte)'F'){
-            in = (byte)(e.getKeyCode()-(int)'A');
+            in = (byte)(e.getKeyCode()-(int)'A' + 10);
             key_state[in] = true;
-            latest_key = (byte)e.getKeyCode();
+            latest_key = in;
             //System.out.println((char)in);
             key_update_flag = true;
         }
@@ -68,7 +68,7 @@ public class Chip8GUIunit extends JFrame implements KeyListener{
             latest_key = (byte)e.getKeyCode();
         }
         if((e.getKeyCode() >= (byte)'A' && e.getKeyCode() <= (byte)'F')){
-            in = (byte)(e.getKeyCode()-(int)'A');
+            in = (byte)(e.getKeyCode()-(int)'A' + 10);
             key_state[in] = false;
             latest_key = (byte)e.getKeyCode();
         }
