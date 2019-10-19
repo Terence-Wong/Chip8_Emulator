@@ -5,7 +5,7 @@
 public class Chip8GUIunit extends JFrame implements KeyListener{
     //public static JFrame frame = new JFrame("Chip8 System");
     public MyPanel GUIPanel;
-    public int HEIGHT = 320, WIDTH = 320;
+    public int HEIGHT = 320, WIDTH = 640;
 
     public boolean key_update_flag = false;
     public boolean[] key_state = new boolean[16];

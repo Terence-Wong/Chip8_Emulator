@@ -31,14 +31,14 @@ public class Chip8{
     boolean cpu_lock = false;
 
     byte[] memory = new byte[0xFFF]; // 4095 bytes Game Memory
-    byte[] registers = new byte[16];    // 8-bit Data Registers (V0 - VF)
-    short addressI;                     // 16-bit Address Register I
+    int[] registers = new int[16];    // 8-bit Data Registers (V0 - VF)
+    int addressI;                     // 16-bit Address Register I
     int programCounter;               // 16-bit Program Counter
     Stack programStack = new Stack();   // 16-bit program stack
 
     Chip8GUIunit window = null;
 
-    byte[] chip8_font_set = {
+    short[] chip8_font_set = {
         0xF0, 0x90, 0x90, 0x90, 0xF0, // 0  , starts at address 0
         0x20, 0x60, 0x20, 0x20, 0x70, // 1  , 5
         0xF0, 0x10, 0xF0, 0x80, 0xF0, // 2  , 10 ...
@@ -67,8 +67,8 @@ public class Chip8{
     public void CPUReset(){
         addressI = 0;
         programCounter = 0x200;
-        registers = new byte[16];
-        screen_data = new boolean[64][32];
+        registers = new int[16];
+        screen_data = new boolean[32][64];
         programStack = new Stack();
         draw_flag = false;
         cpu_lock = false;
@@ -77,7 +77,7 @@ public class Chip8{
         delay_timer = 0;
         //load in ROM
         for(int i = 0; i < 80; i++){
-            memory[i] = chip8_font_set[i];
+            memory[i] = (byte)chip8_font_set[i];
         }
 
         //loadROM();
@@ -343,11 +343,12 @@ public class Chip8{
     //Clears the screen. 
     private void op_00E0(){
         draw_flag = true;
-        screen_data = new boolean[64][32]; 
+        screen_data = new boolean[32][64]; 
     }
     //Returns from a subroutine. 
     private void op_00EE(){
         programCounter = (Integer)programStack.pop();
+        programCounter += 2;
     }
     //
     private void op_1NNN(short opcode){
@@ -355,22 +356,22 @@ public class Chip8{
     }
     // Calls subroutine at NNN. 
     private void op_2NNN(short opcode){
-        programStack.push(programCounter);
+        programStack.push(programCounter-2);
         programCounter = opcode & 0x0FFF;
     }
     // 3/5 check
     private void op_3XNN(short opcode){
         int x = (opcode & 0x0F00) >> 8;
-        byte nn = (byte)(opcode & 0x00FF);
-        if (registers[x] == nn){
+        int nn = (opcode & 0x00FF);
+        if ((registers[x] & 0xFF) == nn){
             programCounter += 2;//
         }
     }
     // 3/5 check
     private void op_4XNN(short opcode){
         int x = (opcode & 0x0F00) >> 8;
-        byte nn = (byte)(opcode & 0x00FF);
-        if (registers[x] != nn){
+        int nn = (opcode & 0x00FF);
+        if ((registers[x] & 0xFF) != nn){
             programCounter += 2;//
         }
     }
@@ -378,7 +379,7 @@ public class Chip8{
     private void op_5XY0(short opcode){
         int x = (opcode & 0x0F00) >> 8;
         int y = (opcode & 0x00F0) >> 4;
-        if (registers[x] == registers[y]){
+        if ((registers[x] & 0xFF) == (registers[y] & 0xFF)){
             programCounter += 2;
         }
     }
@@ -393,7 +394,7 @@ public class Chip8{
     private void op_7XNN(short opcode){
         int x = (opcode & 0x0F00) >> 8;
         byte nn = (byte)(opcode & 0x00FF);
-        registers[x] = (byte)((registers[x] & 0xFF) + (nn & 0xFF));
+        registers[x] = (registers[x] & 0xFF) + (nn & 0xFF);
     }
     // 2.5/5 check
     private void op_8XY0(short opcode){
@@ -437,7 +438,7 @@ public class Chip8{
         int y = (opcode & 0x00F0) >> 4;
         int z = (registers[x] & 0xFF) - (registers[y] & 0xFF);
         registers[0xF] = 1;
-        if((registers[y] & 0xFF) >= (registers[x] & 0xFF)){
+        if((registers[y] & 0xFF) > (registers[x] & 0xFF)){
             registers[0xF] = 0;
             z += 255;
         }
@@ -448,7 +449,7 @@ public class Chip8{
         int x = (opcode & 0x0F00) >> 8;
         //int y = (opcode & 0x00F0) >> 4; y is unused
         registers[0xF] = (byte)(registers[x] & 0x01);
-        registers[x] = (byte)((registers[x] & 0xFF) >>> 1);
+        registers[x] = registers[x] >>> 1;
     }
     //1/5 check
     private void op_8XY7(short opcode){
@@ -456,7 +457,7 @@ public class Chip8{
         int y = (opcode & 0x00F0) >> 4;
         int z = (registers[y] & 0xFF) - (registers[x] & 0xFF);
         registers[0xF] = 1;
-        if((registers[x] & 0xFF) >= (registers[y] & 0xFF)){
+        if((registers[x] & 0xFF) > (registers[y] & 0xFF)){
             registers[0xF] = 0;
             z += 255;
         }
@@ -465,14 +466,14 @@ public class Chip8{
     //2.5 check
     private void op_8XYE(short opcode){
         int x = (opcode & 0x0F00) >> 8;
-        registers[0xF] = (byte)((registers[x] & 0x80) >>> 7);
-        registers[x] = (byte)((registers[x] & 0xFF) << 1);
+        registers[0xF] = (registers[x] & 0x80) >>> 7;
+        registers[x] = (registers[x] & 0xFF) << 1;
     }
     //1/5 check
     private void op_9XY0(short opcode){
         int x = (opcode & 0x0F00) >> 8;
         int y = (opcode & 0x00F0) >> 4;
-        if (registers[x] != registers[y]){
+        if ((registers[x] & 0xFF) != (registers[y] & 0xFF)){
             programCounter += 2;
         }
     }
@@ -488,7 +489,7 @@ public class Chip8{
     private void op_CXNN(short opcode){
         int x = (opcode & 0x0F00) >> 8;
         byte nn = (byte)(opcode & 0x00FF);
-        registers[x] = (byte)(((int) Math.round(Math.random()*(255))) & nn);
+        registers[x] = ((int) Math.round(Math.random()*(255))) & nn;
     }
     // draws I's sprite at (X,Y) of height N  /// hard check sometime?
     private void op_DXYN(short opcode){;
@@ -508,8 +509,8 @@ public class Chip8{
             for(int column = 0; column < 8; column++){
                 int mask = 1 << (7-column);
                 if( ( (data & mask) >>> (7-column) ) == 1){
-                    int coordx = x + column;
-                    int coordy = y + row;
+                    int coordx = registers[x] + column;
+                    int coordy = registers[y] + row;
 
                     if(coordx >= screen_data[0].length){
                         coordx -= screen_data[0].length;
@@ -531,21 +532,21 @@ public class Chip8{
 
     private void op_EX9E(short opcode){
         int x = (opcode & 0x0F00) >> 8;
-        if(key_state[(registers[x])]){ //
+        if(key_state[(registers[x] & 0xFF)]){ //
             programCounter += 2;
         }
     }
 
     private void op_EXA1(short opcode){
         int x = (opcode & 0x0F00) >> 8;
-        if(!key_state[(registers[x])]){   ////
+        if(!key_state[(registers[x] & 0xFF)]){   ////
             programCounter += 2;
         }
     }
     //
     private void op_FX07(short opcode){
         int x = (opcode & 0x0F00) >> 8;
-        registers[x] = (byte)(delay_timer & 0xFFFF);// % Byte.MAX_VALUE); // no documentation, assume correct implementation. Error converting short to byte otherwise
+        registers[x] = (delay_timer & 0xFFFF);// % Byte.MAX_VALUE); // no documentation, assume correct implementation. Error converting short to byte otherwise
     }
     private void op_FX0A(short opcode){
         cpu_lock = true;
@@ -563,14 +564,14 @@ public class Chip8{
     // f-ing works
     private void op_FX1E(short opcode){
         int x = (opcode & 0x0F00) >> 8;
-        addressI = (short)( (addressI & 0xFFFF) + (registers[x] & 0xFF) ); // check for carry flag?
+        addressI = ( (addressI & 0xFFFF) + (registers[x] & 0xFF) ); // check for carry flag?
     }
     // //sets I to v0's character in font set
     private void op_FX29(short opcode){
         int x = (opcode & 0x0F00) >> 8;
 
-        if(0 <= registers[x] && registers[x] <= 0xF){
-            addressI = (short)((registers[x] & 0xFF)*5);
+        if(0 <= (registers[x] & 0xFF) && (registers[x] & 0xFF) <= 0xF){
+            addressI = ((registers[x] & 0xFF)*5);
         }else{
             System.out.println("(FX29) unrecognized character: " + (char)(registers[x] & 0xFF));
             //outside character set in chip 8 (0-F)
@@ -588,7 +589,7 @@ public class Chip8{
     private void op_FX55(short opcode){
         int x = (opcode & 0x0F00) >> 8;
         for(int i = 0; i <= x; i++){
-            memory[(addressI & 0xFFFF) + i] = registers[i];
+            memory[(addressI & 0xFFFF) + i] = (byte)(registers[i] & 0xFF);
         }
     }
     //f-ing works
