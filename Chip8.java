@@ -81,8 +81,8 @@ public class Chip8{
         }
 
         //loadROM();
-        loadROM("invader.bin");
-        //loadROM("Tic-Tac-Toe [David Winter].ch8");
+        //loadROM("invader.bin");
+        loadROM("Tic-Tac-Toe [David Winter].ch8");
     }
     private void loadROM(){
         /*
